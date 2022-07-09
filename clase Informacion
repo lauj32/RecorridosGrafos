@@ -1,0 +1,42 @@
+public class Informacion {
+	private int longInAct = 0;
+	private int distMin = 9999;
+	
+
+	public int getLongInAct() {
+		return longInAct;
+	}
+
+	public void setLongInAct(int longInAct) {
+		this.longInAct = longInAct;
+	}
+	
+	public int getDistMin() {
+		return distMin;
+	}
+
+	public void setDistMin(int distMin) {
+		this.distMin = distMin;
+	}
+	
+	public void aumentarDist(int cant) {
+		this.distMin += cant;
+	}
+	
+	public void reducitDist(int cant) {
+		this.distMin -= cant;
+	}
+
+	public void aumentar(int cant) {
+		this.longInAct += cant;
+	}
+	
+	public void restar(int cant) {
+		this.longInAct -= cant;
+	}
+	
+	
+	
+	
+	
+}
