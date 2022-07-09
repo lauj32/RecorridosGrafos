@@ -1,0 +1,116 @@
+import implementacionLista.*;
+import implementacionGrafo.*;
+import implementacionPilaCola.*;
+
+public class Recorridos<T> {
+
+	public ListaGenerica<T> dfs (Grafo<T> grafo){
+		ListaGenerica<T> result = new ListaEnlazadaGenerica<T>();
+		boolean[] marca = new boolean[grafo.listaDeVertices().tamanio()+1];
+		int i;
+		for(i = 1 ; i <= grafo.listaDeVertices().tamanio() ; i++) {
+			if(!marca[i])
+				this.dfs(i,grafo,marca,result);
+		}
+		return result;
+	}
+	
+	private void dfs(int i , Grafo<T> grafo , boolean[] marca , ListaGenerica<T> result) {
+		marca[i] = true;
+		Vertice<T> v = grafo.listaDeVertices().elemento(i);
+		result.agregarFinal(v.dato());
+		ListaGenerica<Arista<T>> ady = grafo.listaDeAdyacentes(v);
+		ady.comenzar();
+		while(!ady.fin()) {
+			int j = ady.proximo().verticeDestino().getPosicion();
+			if(!marca[j]) 
+				this.dfs(j,grafo,marca,result);
+			
+		}
+	}
+	
+	public ListaGenerica<T> bfs(Grafo<T> grafo){
+		ListaGenerica<T> result = new ListaEnlazadaGenerica<T>();
+		boolean marca[] = new boolean[grafo.listaDeVertices().tamanio()+1];
+		for(int i = 1 ; i <= grafo.listaDeVertices().tamanio(); i++) {
+			if(!marca[i])
+				this.bfs(i,grafo,marca,result);
+		}
+				
+		return result;
+	}
+	
+	private void bfs(int i , Grafo<T> grafo , boolean[] marca , ListaGenerica<T> result) {
+		ListaGenerica<Arista<T>> ady = null;
+		ColaGenerica<Vertice<T>> cola = new ColaGenerica<Vertice<T>>();
+		cola.encolar(grafo.listaDeVertices().elemento(i));
+		marca[i] = true;
+		
+		while(!cola.esVacia()){
+			Vertice<T> v = cola.desencolar();
+			result.agregarFinal(v.dato());
+			ady = grafo.listaDeAdyacentes(v); //ady es la lista de aristas del vertice v
+			ady.comenzar();
+			while(!ady.fin()) {
+				Arista<T> arista = ady.proximo();
+				int j = arista.verticeDestino().getPosicion();
+				if(!marca[i]) {
+					Vertice<T> w = arista.verticeDestino();
+					marca[j] = true;
+					cola.encolar(w);
+				}
+			}
+		}
+	}
+	
+	private Vertice<T> buscar (Grafo<T> grafo , T dato){
+		int i = 1;
+		while(grafo.listaDeVertices().elemento(i).dato() != dato) i++;
+		if(grafo.listaDeVertices().elemento(i).dato() == dato) return grafo.listaDeVertices().elemento(i);
+		else return null;
+	}
+	
+	
+	public ListaGenerica<T> devolverCamino (Grafo <T> grafo , T inicio , T fin){
+		ListaGenerica<T> camino = new ListaEnlazadaGenerica<T>();
+		if(!grafo.esVacio()) {
+			boolean[] marca = new boolean[grafo.listaDeVertices().tamanio()+1];
+			Vertice<T> origen = buscar(grafo,inicio);
+			if(origen != null)
+				this.devolverCamino(origen.getPosicion(),grafo, marca, camino, fin);
+		}
+		return camino;
+	}
+	
+	private boolean devolverCamino(int i , Grafo<T> grafo , boolean[] marca , ListaGenerica<T> camino, T destino) {
+		boolean encontre = false;
+		marca[i] = true;
+		
+		Vertice<T> v = grafo.listaDeVertices().elemento(i);
+		camino.agregarFinal(v.dato());
+		ListaGenerica<Arista<T>> ady = grafo.listaDeAdyacentes(v);
+		
+		if(v.dato().equals(destino)) {
+			encontre = true;
+		}
+		
+		else {
+			ady.comenzar();
+			Arista<T> arista;
+			while(!ady.fin()&&!encontre) {
+				arista = ady.proximo();
+				int j = arista.verticeDestino().getPosicion();
+				if(!marca[j])
+					encontre = devolverCamino(j,grafo,marca,camino,destino);
+			}
+			if(!encontre) {
+				camino.eliminarEn(camino.tamanio());
+				marca[i] = false;
+			}
+		}
+		
+		return encontre;
+		
+	} //FINAL METODO
+	
+}
