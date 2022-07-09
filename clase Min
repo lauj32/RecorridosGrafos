@@ -1,0 +1,17 @@
+public class Min {
+	private int minimo;
+	
+	public Min(int cant) {
+		this.minimo = cant;
+	}
+
+	public int getMinimo() {
+		return minimo;
+	}
+
+	public void setMinimo(int minimo) {
+		this.minimo = minimo;
+	}
+	
+	
+}
