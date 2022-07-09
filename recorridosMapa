@@ -1,0 +1,373 @@
+import implementacionGrafo.*;
+import implementacionLista.*;
+import implementacionPilaCola.ColaGenerica;
+
+public class Mapa {
+	
+	private Grafo<String> mapaCiudades;
+
+	
+	public Mapa(Grafo<String> map) {
+		this.mapaCiudades = map;
+	}
+	
+	/*
+	* Retorna la lista de ciudades que se deben atravesar para ir de ciudad1 a ciudad2 en caso que se pueda
+	* llegar, si no retorna la lista vacía. (Sin tener en cuenta el combustible).
+	*/
+	public ListaGenerica<String> devolverCamino(String ciudad1 , String ciudad2){
+		ListaGenerica<String> result = new ListaEnlazadaGenerica<String>();
+		if(!mapaCiudades.esVacio()) {
+			boolean[] marca = new boolean[mapaCiudades.listaDeVertices().tamanio()+1];
+			int i = 1;
+			while(mapaCiudades.listaDeVertices().elemento(i).dato() != ciudad1) i++;
+			if(mapaCiudades.listaDeVertices().elemento(i).dato() == ciudad1)
+				this.devolverCamino(i,mapaCiudades,marca,result,ciudad2);
+		}
+		return result;
+	}
+	
+	private void devolverCamino(int i, Grafo<String> mapaCiudades, boolean[] marca , ListaGenerica<String> result, String ciudad2) {
+		marca[i] = true;
+		Vertice<String> v = mapaCiudades.listaDeVertices().elemento(i);
+		//System.out.println("Estamos en el vertice : " + v.dato());
+		if(!(v.dato() == ciudad2)) {
+			ListaGenerica<Arista<String>> ady = mapaCiudades.listaDeAdyacentes(v);
+			ady.comenzar();
+			while(!ady.fin()&&(result.esVacia())) {
+				int j = ady.proximo().verticeDestino().getPosicion();
+				if(!marca[j]) {
+					this.devolverCamino(j,mapaCiudades,marca,result,ciudad2);
+					//System.out.println("Volvimos al nodo : " + v.dato());
+				}
+			}
+			//Se entra aca si se termino de recorrer los adyacente o si la lista no era vacia
+			//if(result.esVacia()) System.out.println("Estamos en el nodo :" + v.dato() + "y result es vacia");
+			if(!result.esVacia()) result.agregarInicio(v.dato());
+			//System.out.println("Tam result : "+ result.tamanio());
+		}
+		else result.agregarInicio(v.dato());
+	}
+	
+	
+	
+	public ListaGenerica<String> devolverCaminoExceptuando(String ciudad1 , String ciudad2,ListaGenerica<String> ciudades){
+		ListaGenerica<String> result = new ListaEnlazadaGenerica<String>();
+		if(!mapaCiudades.esVacio()) {
+			boolean[] marca = new boolean[mapaCiudades.listaDeVertices().tamanio()+1];
+			int i;
+			for(i = 1 ; i <= ciudades.tamanio() ; i++) 
+				for(int j = 1 ; j <= mapaCiudades.listaDeVertices().tamanio() ; j++)
+					if(mapaCiudades.listaDeVertices().elemento(j).dato() == ciudades.elemento(i)) marca[j] = true;
+			i = 1;
+			while(mapaCiudades.listaDeVertices().elemento(i).dato() != ciudad1 && !marca[i]) i++;
+			if(mapaCiudades.listaDeVertices().elemento(i).dato() == ciudad1)
+				this.devolverCaminoExceptuando(i,mapaCiudades,marca,result,ciudad1,ciudad2,ciudades);
+		}
+		return result;
+	}
+	
+	private void devolverCaminoExceptuando(int i, Grafo<String> mapaCiudades, boolean[] marca , ListaGenerica<String> result, String ciudad1, String ciudad2,ListaGenerica<String> ciudades) {
+		marca[i] = true;
+		Vertice<String> v = mapaCiudades.listaDeVertices().elemento(i);
+		//System.out.println("Estamos en el vertice : " + v.dato());
+		
+		if(!(v.dato() == ciudad2)) {
+			ListaGenerica<Arista<String>> ady = mapaCiudades.listaDeAdyacentes(v);
+			ady.comenzar();
+			while(!ady.fin()&&(result.esVacia())) {
+				int j = ady.proximo().verticeDestino().getPosicion();
+				if(!marca[j]){
+					//System.out.println("Se va a entrar al vertice " + j);
+					this.devolverCaminoExceptuando(j,mapaCiudades,marca,result,ciudad1,ciudad2,ciudades);
+					//System.out.println("Volvimos al nodo : " + v.dato());
+				}
+			}
+			//Se entra aca si se termino de recorrer los adyacente o si la lista no era vacia
+			if(!result.esVacia()) result.agregarInicio(v.dato());
+		}
+		else result.agregarInicio(v.dato());
+	}
+	
+	private Vertice<String> buscar (Grafo<String> grafo , String dato){
+		int i = 1;
+		while(grafo.listaDeVertices().elemento(i).dato() != dato) i++;
+		if(grafo.listaDeVertices().elemento(i).dato() == dato) return grafo.listaDeVertices().elemento(i);
+		else return null;
+	}
+	
+	//Borra los elementos de lista2 y copia en ella los elementos de lista1
+	private void clonar2 (ListaGenerica<String> lista1,ListaGenerica<String> lista2) {
+		lista2.comenzar();
+		while(!lista2.fin()) {
+			lista2.eliminar(lista2.proximo());
+		}
+		lista1.comenzar();
+		while(!lista1.fin()) {
+			lista2.agregarFinal(lista1.proximo());
+		}
+	}
+	
+	/* 	Retorna la lista de ciudades que forman el camino más corto para llegar 
+	 * 	de ciudad1 a ciudad2, si no existe camino retorna la lista vacía. 
+	 * 	(Las rutas poseen la distancia). (Sin tener en cuenta el combustible).
+	 */	
+	public ListaGenerica<String> caminoMasCorto(String ciudad1 , String ciudad2){
+		ListaGenerica<String> result = new ListaEnlazadaGenerica<String>();
+		ListaGenerica<String> camino = new ListaEnlazadaGenerica<String>();
+		if(!mapaCiudades.esVacio()) {
+			boolean[] marca = new boolean[mapaCiudades.listaDeVertices().tamanio()+1];
+			Vertice<String> vertice = buscar(mapaCiudades,ciudad1);
+			Informacion data = new Informacion();
+			if(vertice != null) {
+				camino.agregarFinal(vertice.dato());
+				this.caminoMasCortoPriv(vertice.getPosicion(),marca,mapaCiudades,result,camino,ciudad2,data);
+			}
+		}
+		return result;
+	}
+	
+	private void caminoMasCortoPriv(int i , boolean[] marca, Grafo<String> mapaCiudades, ListaGenerica<String> result , ListaGenerica<String> camino, String ciudad2, Informacion data) {		
+		
+		Vertice<String> v = mapaCiudades.listaDeVertices().elemento(i);
+		
+		//System.out.println("Estamos en el vertice " + v.dato() + " y la distancia actual recorrida es " + data.getLongInAct());
+		
+		ListaGenerica<Arista<String>> adyacentes = mapaCiudades.listaDeAdyacentes(v);
+		
+		if(v.dato() == ciudad2) {
+			if(data.getLongInAct() < data.getDistMin()) {
+				clonar2(camino,result); //Copia camino en result
+				data.setDistMin(data.getLongInAct());
+				System.out.println("Se actualizo la distancia minima a " + data.getDistMin());
+			}
+		}
+		else {
+			marca[i] = true; //No se marca el destino para poder volver a llegar a el mediante otro camino
+			adyacentes.comenzar();
+			Arista<String> arista;
+			while(!adyacentes.fin()) {
+				arista = adyacentes.proximo();
+				int j = arista.verticeDestino().getPosicion();
+				if(!marca[j]) {
+					
+					camino.agregarFinal(arista.verticeDestino().dato());
+					data.aumentar(arista.peso());
+					
+					this.caminoMasCortoPriv(j,marca,mapaCiudades,result,camino,ciudad2,data);
+					
+					//System.out.println("Volvimos al vertice " + v.dato());
+					camino.eliminarEn(camino.tamanio());
+					data.restar(arista.peso());
+				}
+			}
+			
+			//System.out.println("Estamos en vertice " + v.dato() + " y no quedan mas adyacentes");
+				
+		} // Fin Else 
+		
+		marca[i] = false;
+	}
+	
+	/*
+	
+	
+	public ListaGenerica<String> caminoMasCorto2(String ciudad1, String ciudad2){
+		Min minimo = new Min(9999);
+		boolean[]marca = new boolean[mapaCiudades.listaDeVertices().tamanio() + 1];
+		ListaEnlazadaGenerica<String> lis = new ListaEnlazadaGenerica<String>();
+		ListaEnlazadaGenerica<String> camino = new ListaEnlazadaGenerica<String>();
+		ListaGenerica<Vertice<String>> aux = mapaCiudades.listaDeVertices();
+		aux.comenzar();
+		Vertice<String> vertice;
+		boolean ok = false;
+		int i = -1;
+		while ((!aux.fin()) && (!ok)) { //Encuentra ciudad1
+			vertice = aux.proximo();
+			if (vertice.dato() == ciudad1) {
+				ok = true;
+				i = vertice.getPosicion();
+				lis.agregarFinal(vertice.dato());
+				System.out.println("SE ACABA DE AGREGAR A LA LISTA " + vertice.dato());
+			}
+		}
+		if (i != -1) { //Si i != -1 significa que se encontro ciudad1
+			int distancia = 0;
+			dfsCorto (i,lis,camino,marca,ciudad2,minimo,distancia);
+		}
+		return camino;
+		
+	}
+	
+	private void dfsCorto (int i,ListaEnlazadaGenerica<String> lis,ListaEnlazadaGenerica<String> camino,boolean[]marca,String ciudad2,Min minimo,int distancia) {
+		Vertice<String> v = mapaCiudades.listaDeVertices().elemento(i);
+		
+		//System.out.println("Estamos en el vertice " + v.dato() + " y la distancia actual es " + distancia);
+		
+		
+		if (v.dato() == ciudad2) {
+			if (distancia < minimo.getMinimo()) {
+				clonar2 (lis,camino);
+				minimo.setMinimo(distancia);
+				//System.out.println("Se actualizo la distancia minima a " + minimo.getMinimo());
+			}
+		}
+		else {
+			marca[i] = true; //NO MARCO EL DESTINO PORQUE VOY A VOLVER A IR AHI
+			ListaGenerica<Arista<String>> ady = mapaCiudades.listaDeAdyacentes(v);
+			ady.comenzar();
+			while (!ady.fin()){
+				Arista<String> arista = ady.proximo();
+				int j = arista.verticeDestino().getPosicion();
+				if (!marca[j]) {
+					distancia+= arista.peso();
+					lis.agregarFinal(arista.verticeDestino().dato());
+					System.out.println("SE ACABA DE AGREGAR A LA LISTA " + arista.verticeDestino().dato());
+					dfsCorto(j,lis,camino,marca,ciudad2,minimo,distancia);
+					//System.out.println("Volvimos al vertice " + v.dato());
+					lis.eliminarEn(lis.tamanio());
+					System.out.println("SE ACABA DE QUITAR DE  LA LISTA " + arista.verticeDestino().dato());
+					distancia-=arista.peso();
+				}
+			}
+			
+			//System.out.println("Estamos en vertice " + v.dato() + " y no quedan mas adyacentes");
+		}
+			
+	}
+	
+	
+	*/
+	
+	public ListaGenerica<String> caminoSinCargarCombustible(String origen, String destino, int tanqueAuto){
+		ListaGenerica<String> result = new ListaEnlazadaGenerica<String>();
+		if(!mapaCiudades.esVacio()) {
+			boolean[] marca = new boolean[mapaCiudades.listaDeVertices().tamanio()+1];
+			Vertice<String> v = buscar(mapaCiudades,origen);
+			int costoCamino = 0;
+			if(v != null)
+				caminoSinCargarCombustiblePrivado(v.getPosicion(),marca,destino,tanqueAuto,costoCamino,mapaCiudades,result);
+		}
+		return result;
+		
+	}
+	
+	
+	private boolean caminoSinCargarCombustiblePrivado (int i,boolean[] marca,String destino,int tanqueAuto,int costoCamino,Grafo<String> grafo,ListaGenerica<String> result) {
+		marca[i] = true;
+		boolean encontre = false;
+		
+		Vertice<String> vertice = grafo.listaDeVertices().elemento(i);
+		result.agregarFinal(vertice.dato());
+		ListaGenerica<Arista<String>> adyacentes = grafo.listaDeAdyacentes(vertice);
+		
+		if(vertice.dato().equals(destino)) {
+			encontre = true;
+		}
+	
+		else {
+			adyacentes.comenzar();
+			Arista<String> arista;
+			while(!adyacentes.fin()&&!encontre) {
+				arista = adyacentes.proximo();
+				int j = arista.verticeDestino().getPosicion();
+				if(!marca[j]) {
+					if(costoCamino + arista.peso() <= tanqueAuto) {
+						costoCamino += arista.peso();
+						encontre = caminoSinCargarCombustiblePrivado(j,marca,destino,tanqueAuto,costoCamino,grafo,result);
+						costoCamino -= arista.peso();
+					}
+				}
+			}
+			if(!encontre) {
+				result.eliminarEn(result.tamanio());
+				marca[i] = false;
+			}
+			
+		}
+		
+		return encontre;
+		
+	}
+	
+	
+	
+	
+	
+	
+	public ListaGenerica<String> caminoConMenorCargaDeCombusitble (String ciudad1 , String ciudad2 , int tanqueAuto){
+		ListaGenerica<String> result = new ListaEnlazadaGenerica<String>();
+		ListaGenerica<String> camino = new ListaEnlazadaGenerica<String>();
+		
+		if(!mapaCiudades.esVacio()) {
+			boolean[] marca = new boolean[mapaCiudades.listaDeVertices().tamanio()+1];
+			Vertice<String> v = buscar(mapaCiudades,ciudad1);
+			InfoAuto info = new InfoAuto(tanqueAuto);
+			camino.agregarFinal(v.dato());
+			caminoConMenorCargaDeCombustiblePrivado(v.getPosicion(),mapaCiudades,marca,ciudad2,info,result,camino);
+			camino.eliminarEn(camino.tamanio());
+		}
+		
+		return result;
+	}
+	
+	private void mostrarLista(ListaGenerica<String> lis) {
+		lis.comenzar();
+		System.out.println();
+		System.out.print(" === CAMINO === ");
+		while(!lis.fin()) {
+			System.out.print(lis.proximo() + " , ");
+		}
+	}
+	
+	private void caminoConMenorCargaDeCombustiblePrivado(int i, Grafo<String>mapaCiudades,boolean[] marca, String ciudad2,InfoAuto info ,ListaGenerica<String>result,ListaGenerica<String> camino) {
+		
+		Vertice<String> v = mapaCiudades.listaDeVertices().elemento(i);
+		ListaGenerica<Arista<String>> ady = mapaCiudades.listaDeAdyacentes(v);
+		int actual = info.getCombustibleActual();
+		
+		if(v.dato().equals(ciudad2)) {
+			if(info.getCarga() < info.getCargaMin()) {
+				info.setCargaMin(info.getCarga());
+				clonar2(camino,result);
+			}
+		}
+		else {
+			marca[i] = true;
+			boolean cargo;
+			int carga;
+			ady.comenzar();
+			while(!ady.fin()) {
+				Arista<String> arista = ady.proximo();
+				int j = arista.verticeDestino().getPosicion();
+				if(!marca[j]) {
+					cargo = false;
+					carga = 0;
+					if(!(arista.peso() > info.getTanqueAuto())) {
+						
+						if(arista.peso() >= info.getCombustibleActual()) {
+							carga = arista.peso()-info.getCombustibleActual();
+							info.cargar(carga);
+							cargo = true;
+						}
+						
+						int recorrido = info.getCombustibleActual()-arista.peso();
+						info.setCombustibleActual(recorrido);
+						camino.agregarFinal(arista.verticeDestino().dato());
+						
+						caminoConMenorCargaDeCombustiblePrivado(j,mapaCiudades,marca,ciudad2,info,result,camino);
+						
+						info.setCombustibleActual(actual);
+						camino.eliminarEn(camino.tamanio());
+						if(cargo) info.setCarga(info.getCarga()-carga);
+					}
+				}
+				
+			}
+			
+			marca[i] = false;
+			
+		}
+	}
+	
+}
