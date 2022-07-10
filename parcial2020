@@ -1,0 +1,61 @@
+import implementacionGrafo.*;
+import implementacionLista.*;
+
+public class Parcial2020 {
+		
+		private Vertice<Ciudad> buscar(Grafo<Ciudad> grafo , String dato){
+			int i = 1;
+			while(grafo.listaDeVertices().elemento(i).dato().getNomCiudad() != dato) i++;
+			if(grafo.listaDeVertices().elemento(i).dato().getNomCiudad() == dato) return grafo.listaDeVertices().elemento(i);
+			else return null;
+		}
+	
+	
+		public int resolver(Grafo<Ciudad> ciudades , String origen, String destino , int maxControles) {
+			
+			Informacion infoViaje = new Informacion();
+			if(!ciudades.esVacio()) {
+				boolean encontre = false;
+				if(buscar(ciudades,destino) != null) encontre = true;
+				Vertice<Ciudad> v = buscar(ciudades,origen);
+				boolean[] marca = new boolean[ciudades.listaDeVertices().tamanio()+1];
+				if(v != null && encontre) {
+					resolverPriv(v.getPosicion(),marca,destino,maxControles,infoViaje,ciudades);
+				}
+			}
+			
+			return infoViaje.getTiempoMax();
+		}
+		
+		private void resolverPriv(int i , boolean[] marca , String destino , int maxControles, Informacion infoViaje, Grafo<Ciudad> grafo) {
+		
+			Vertice<Ciudad> v = grafo.listaDeVertices().elemento(i);
+			ListaGenerica<Arista<Ciudad>> ady = grafo.listaDeAdyacentes(v);
+			infoViaje.agregar(v.dato().getLimDias());
+			
+			if(v.dato().getNomCiudad() == destino) {
+				if(infoViaje.getTiempoActual() > infoViaje.getTiempoMax())
+					infoViaje.setTiempoMax(infoViaje.getTiempoActual());
+			}
+			else {
+				marca[i] = true;
+				ady.comenzar();
+				Arista<Ciudad> arista;
+				while(!ady.fin()) {
+					arista = ady.proximo();
+					int j = arista.verticeDestino().getPosicion();
+					if(!marca[j]) {
+						if(arista.peso() <= maxControles) {
+							resolverPriv(j,marca,destino,maxControles,infoViaje,grafo);
+						}
+					}
+				}
+				
+				marca[i] = false;
+				
+			}
+			
+			infoViaje.restar(v.dato().getLimDias());
+			
+		}
+}
