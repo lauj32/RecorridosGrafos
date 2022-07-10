@@ -1,0 +1,28 @@
+public class Informacion {
+	private int tiempoActual;
+	private int tiempoMax = -999;
+	
+	public int getTiempoActual() {
+		return tiempoActual;
+	}
+
+	public void setTiempoActual(int tiempoActual) {
+		this.tiempoActual = tiempoActual;
+	}
+
+	public int getTiempoMax() {
+		return tiempoMax;
+	}
+
+	public void agregar (int cant) {
+		tiempoActual += cant;
+	}
+	
+	public void restar(int cant) {
+		tiempoActual -= cant;
+	}
+	
+	public void setTiempoMax(int cant) {
+		tiempoMax = cant;
+	}
+}
