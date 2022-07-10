@@ -1,0 +1,61 @@
+import implementacionGrafo.*;
+import implementacionPilaCola.*;
+import implementacionLista.*;
+
+public class DetectarInfeccion {
+	
+	private Vertice<String> buscar(Grafo<String> grafo , String dato) {
+		int i = 1;
+		while(grafo.listaDeVertices().elemento(i).dato() != dato)i++;
+		if(grafo.listaDeVertices().elemento(i).dato() == dato) return grafo.listaDeVertices().elemento(i);
+		else return null;
+	}
+
+	public int tiempoInfeccion(Grafo<String> grafo , String virusOrigen) {
+		int resultado = 0;
+		if(!grafo.esVacio()) {
+			Vertice<String> v = buscar(grafo,virusOrigen);
+			boolean[] marca = new boolean[grafo.listaDeVertices().tamanio()+1];
+			if(v != null)
+				resultado = tiempoInfeccionPriv(v.getPosicion(),grafo,marca);
+		}
+		return resultado;
+	}
+	
+	private int tiempoInfeccionPriv(int i , Grafo<String> grafo, boolean[] marca) {
+		
+		int res = 0;
+		ListaGenerica<Arista<String>> ady = null;
+		ColaGenerica<Vertice<String>> cola = new ColaGenerica<Vertice<String>>();
+		
+		cola.encolar(grafo.listaDeVertices().elemento(i));
+		cola.encolar(null);
+		
+		marca[i] = true;
+		while(!cola.esVacia()) {
+			Vertice<String> v = cola.desencolar();
+			if(v != null) {
+				ady = grafo.listaDeAdyacentes(v);
+				ady.comenzar();
+				while(!ady.fin()) {
+					Arista<String> arista = ady.proximo();
+					int j = arista.verticeDestino().getPosicion();
+					if(!marca[j]) {
+						Vertice<String> w = arista.verticeDestino();
+						System.out.println("Se infecto el vertice " + w.dato());
+						marca[j] = true;
+						cola.encolar(w);
+					}
+				}
+			}
+			else if(!cola.esVacia()) {
+				cola.encolar(null);
+				System.out.println("El nivel termino de ser infectado");
+				res++;
+			}
+		}
+	
+		return res;
+	}
+	
+}
